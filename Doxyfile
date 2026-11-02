@@ -1,0 +1,7 @@
+# Doxyfile configuration for Doxygen
+PROJECT_NAME           = "Sistema Alumnos"
+OUTPUT_DIRECTORY       = "docs"
+RECURSIVE              = YES
+GENERATE_LATEX         = NO
+
+# TODO (Parte B): completa la configuración siguiendo la guía paso a paso.

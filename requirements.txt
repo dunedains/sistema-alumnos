@@ -1,0 +1,6 @@
+# Dependencias de ejecución de "Sistema Alumnos".
+# Versiones fijadas a propósito: son antiguas y es parte de la actividad auditarlas.
+Flask==2.2.2
+# Werkzeug se fija porque Flask 2.2.x no es compatible con Werkzeug 3.x
+Werkzeug==2.2.2
+requests==2.28.1

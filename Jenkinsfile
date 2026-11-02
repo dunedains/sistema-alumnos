@@ -11,7 +11,10 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-    // >>> [A-TRIGGER] (Parte A, paso A4): aquí va el bloque "triggers"
+    triggers {
+        // Auditoría programada (lunes a viernes, ~06:00): aparecen CVE nuevos aunque el código no cambie
+        cron('H 6 * * 1-5')
+    }
 
     environment {
         // pipenv crea el entorno virtual (.venv) dentro del workspace del job
@@ -104,8 +107,32 @@ pipeline {
         always {
             archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
         }
-        // >>> [A-POST] (Parte A, paso A4): aquí van las alertas "unstable" y "failure"
+        unstable {
+            echo '[ALERTA] El build quedó INESTABLE: hay hallazgos de seguridad. Revisa la carpeta reports/.'
+            script { notificar('INESTABLE') }
+        }
+        failure {
+            echo '[ALERTA] El build FALLÓ. Revisa el log de la etapa en rojo.'
+            script { notificar('FALLIDO') }
+        }
+        success {
+            echo '[OK] Build correcto: pruebas, análisis y dependencias sin hallazgos.'
+        }
     }
 }
 
-// >>> [A-FUNCION] (Parte A, paso A4): aquí va la función notificar()
+// Envía una alerta a un webhook (Discord, Slack, Teams o webhook.site).
+// La URL NO va en el repositorio: se guarda en Jenkins como credencial "Secret text" con ID "webhook-alertas".
+def notificar(String estado) {
+    String mensaje = "Sistema Alumnos - build #${env.BUILD_NUMBER} ${estado}: ${env.BUILD_URL}"
+    echo "NOTIFICACION: ${mensaje}"
+    try {
+        withCredentials([string(credentialsId: 'webhook-alertas', variable: 'WEBHOOK_URL')]) {
+            withEnv(["MENSAJE=${mensaje}"]) {
+                sh 'curl -fsS -X POST -H "Content-Type: application/json" -d "{\\"content\\": \\"$MENSAJE\\", \\"text\\": \\"$MENSAJE\\"}" "$WEBHOOK_URL" > /dev/null'
+            }
+        }
+    } catch (err) {
+        echo "No se envió la notificación (¿creaste la credencial 'webhook-alertas'?): ${err.message}"
+    }
+}

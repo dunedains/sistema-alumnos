@@ -79,4 +79,5 @@ def crear_alumno():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # El depurador de Werkzeug permite ejecutar código remoto: solo se activa si se pide explícitamente
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1")
